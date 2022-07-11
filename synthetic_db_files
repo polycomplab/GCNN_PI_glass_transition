@@ -1,8 +1,10 @@
-Download link for PolyAskInG database containing 6 726 950 combinatorically generated polyimides and corresponding Tg values as csv-formatted file:
-https://drive.google.com/file/d/1-UAnQT06v6pSZ5tnz_q4FWHcx_bqhrtT/view
+Download link for "synthetic" dataset of PolyAskInG database containing 6 726 950 combinatorically generated polyimides and corresponding Tg values as csv-formatted file:
+https://drive.google.com/file/d/1-UAnQT06v6pSZ5tnz_q4FWHcx_bqhrtT/view. 
 
-PolyAskInG database is also available as sqlite database file. For more details, please visit http://polycomplab.org/index.php/ru/database.html
-For Download link for PolyAskInG database (682.1 Mb): https://drive.google.com/file/d/10RCoZnn_iSd3Ug_R4pPBcbg7hPPYT6hu/view?usp=sharing
+"Synthetic" dataset is also available as sqlite database file. For more details, please visit http://polycomplab.org/index.php/ru/database.html
+
+Download link for experimental dataset of PolyAskInG database containing 214 polyimides and corresponding Tg values as xls-formatted file:
+https://drive.google.com/file/d/10WTn1LVPWlPjhMAOHINWFIDgKtviaRIw/view?usp=sharing
 
 For the reference purpose and for the details of PolyAskIng database generation, please, see
 I.V. Volgin, P. Batyr, A.V. Matseevich, A.Y. Dobrovskiy, M.V. Andreeva, V.M. Nazarychev, S.V. Larin, M.Ya. Goikhman, Yu.V. Vizilter, A.A. Askadskii, S.V. Lyulin. 
