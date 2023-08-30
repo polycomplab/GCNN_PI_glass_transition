@@ -27,7 +27,7 @@ pretrain = Config(True)
 if pretrain.state:
     from data.datasets import SynteticDataset
     pretrain.dataset = SynteticDataset(
-        root="/polymers/GCNN_PI_glass_transition/datasets/PA_syn")
+        root="datasets/PA_syn")
     pretrain.optimizer_params = {"lr": 1e-3, "weight_decay": 1e-8}
     pretrain.sheduler_params = {"mode": 'min', "factor": 0.9, "patience": 5}
     pretrain.val_freq = 250

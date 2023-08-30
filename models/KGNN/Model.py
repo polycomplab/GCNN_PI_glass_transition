@@ -173,6 +173,7 @@ class KGNNModel(torch.nn.Module):
 
         x_2 = self.set2set_2(x, data.batch_2)
 
+        # print('x_1.shape', x_1.shape, 'x_2.shape', x_2.shape)
         x = torch.cat([x_1, x_2], dim=1)
 
         x = self.pre_fc_batchnorm(x)

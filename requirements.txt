@@ -148,6 +148,6 @@ urdfpy==0.0.22
 urllib3==1.26.4
 wcwidth==0.2.5
 webencodings==0.5.1
-Werkzeug==2.2.2
+# Werkzeug==2.2.2
 widgetsnbextension==3.5.1
 zipp==3.4.1

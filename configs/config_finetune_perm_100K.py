@@ -6,7 +6,8 @@ class Config:
 import time
 runtime = time.ctime()
 pretrains = {
-        "100000b": ("100000", "pretrain_100000Fri Sep 17 18 14 38 2021_best.pt"),
+        # "full_b": ("full", "pretrain_fullMon Aug  7 15:52:30 2023_best.pt"),
+        "100000b": ("100000", "pretrain_100000Mon Aug  7 15:51:45 2023_best.pt"),
         }
 
 # pre_type = None
@@ -15,10 +16,10 @@ pre_type = '100000b'
 epochs = 60
 # epochs = 30  # no pretrain
 
-dataset_path = "datasets/PI_exp"
+dataset_path = "datasets/PA_exp_perm_He"
 finetune_dataset_name = dataset_path.split('/')[-1]
 
-# eval_dataset_path = "datasets/PI_exp"
+# eval_dataset_path = "datasets/PA_exp_perm_He"
 
 if pre_type is None:
     base_name = f"finetune without pretrain "
@@ -42,7 +43,7 @@ if pretrain.state:
     from data.datasets import SynteticDataset
     pretrain.dataset = SynteticDataset()
     pretrain.optimizer_params = {"lr": 1e-3, "weight_decay": 1e-8}
-    pretrain.sheduler_params = {"mode": 'min', "factor": 0.9, "patience": 5}
+    pretrain.scheduler_params = {"mode": 'min', "factor": 0.9, "patience": 5}
     pretrain.val_freq = 10000
     pretrain.save_freq = 1000
     pretrain.epochs = 20
@@ -56,7 +57,7 @@ if finetune.state:
     finetune.eval = False
     # finetune.eval = True
 
-    finetune.target_name = "Tg, K"
+    finetune.target_name = 'He, Barrer'
     # finetune.eval_dataset = ExperimentalDataset(root=eval_dataset_path, target_name=finetune.target_name)
     finetune.dataset = ExperimentalDataset(root=dataset_path, target_name=finetune.target_name)
 

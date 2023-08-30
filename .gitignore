@@ -1,0 +1,6 @@
+datasets/
+logs/
+checkpoints/
+__pycache__/
+console_logs/
+build/
