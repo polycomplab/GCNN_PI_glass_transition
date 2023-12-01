@@ -28,19 +28,20 @@ pretrains = {
         # "all_short_new": ("all_short_new", "pretrain_short_allFri Jul  1 14:51:21 2022_best.pt"),
         }
 # pre_type = "PA_fullb"
-pre_type = 'PA_100000b'
+# pre_type = 'PA_100000b'
 # pre_type = 'PA_5000b'
-# pre_type = None
+pre_type = None
 # pre_type = '100000b'
 dropout_p = 0.1
 # dropout_p = 0.9
 epochs = 100
 # epochs = 30  # no pretrain
 # epochs = 200
-prefix = 'round_9_new_db_'
+prefix = 'round_20_new_db_'
 
 # dataset_path = "datasets/PA_exp"
-dataset_path = "datasets/PI_exp_new_10_11_2022"
+# dataset_path = "datasets/PI_exp_new_10_11_2022"
+dataset_path = "datasets/PI_exp_new_07_03_2023"
 finetune_dataset_name = dataset_path.split('/')[-1]
 
 # eval_dataset_path = "datasets/PI_exp"
@@ -56,7 +57,7 @@ checkpoints_dir = "checkpoints"
 log_dir = "logs"
 batch_size = 15
 seed = 12
-device_index = 8
+device_index = 6
 
 from models import KGNNModel
 model = KGNNModel(dropout_p=dropout_p)

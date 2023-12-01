@@ -45,6 +45,7 @@ if pretrain.state:
     # pretrain.epochs = 20
     pretrain.epochs = 100
     pretrain.subset = subset
+    pretrain.test_subset_size = 6400
 
 
 # FINETUNE CONFIG

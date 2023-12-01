@@ -6,12 +6,21 @@ class Config:
 import time
 runtime = time.ctime()
 
+# dataset_name = 'PA_syn'
+dataset_name = 'PI_syn'
+dataset_path = f"datasets/{dataset_name}"
+target_name = "Tg, K"
 # subset = None
+# subset = 1000
 # subset = 5000
-subset = 100_000
+# subset = 100_000
+subset = 10_000
 
 base_name = f"pretrain_{subset}" if subset is not None else f'pretrain_full'
+base_name += f'_{dataset_name}_{target_name}_'
 name = base_name + runtime
+prefix = 'round_62'
+name = prefix + name
 checkpoints_dir = "checkpoints"
 log_dir = "logs"
 batch_size = 20  # effective batch size is this * 4 due to gradients accumulation
@@ -27,13 +36,26 @@ pretrain = Config(True)
 if pretrain.state:
     from data.datasets import SynteticDataset
     pretrain.dataset = SynteticDataset(
-        root="datasets/PA_syn")
+        root=dataset_path,
+        target_name=target_name)
     pretrain.optimizer_params = {"lr": 1e-3, "weight_decay": 1e-8}
-    pretrain.sheduler_params = {"mode": 'min', "factor": 0.9, "patience": 5}
-    pretrain.val_freq = 250
-    pretrain.save_freq = 250
+    # pretrain.optimizer_params = {"lr": 4e-3, "weight_decay": 1e-8}
+    # pretrain.scheduler_params = {"mode": 'min', "factor": 0.9, "patience": 5}
+    pretrain.scheduler_params = {"mode": 'min', "factor": 0.5, "patience": 0}
+    # pretrain.val_freq = 250
+    # pretrain.epochs = 500
     pretrain.epochs = 20
+    total_num_batches = (subset * pretrain.epochs) // batch_size
+    # pretrain.val_freq = 1000
+    pretrain.val_freq = total_num_batches // 10
+    # pretrain.save_freq = 250
+    # pretrain.save_freq = 1000
+    pretrain.save_freq = pretrain.val_freq
+    # pretrain.epochs = 20
+    # pretrain.epochs = 100
+    pretrain.num_batches_acc = 4  # number of batches to accumulate gradient over
     pretrain.subset = subset
+    pretrain.test_subset_size = 6400
 
 
 # FINETUNE CONFIG

@@ -27,11 +27,12 @@ else:
     base_name = f"finetuning on {finetune_dataset_name} weights pretrained on {pre_type}"
 
 name = base_name + "#" + runtime
+name = "1_target_perm_" + name
 checkpoints_dir = "checkpoints"
 log_dir = "logs"
 batch_size = 15
 seed = 12
-# device_index = 6
+device_index = 6
 
 from models import KGNNModel
 model = KGNNModel()

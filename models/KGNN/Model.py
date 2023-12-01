@@ -31,6 +31,7 @@ class KGNNModel(torch.nn.Module):
         neighbors_aggr='add',
         dropout_p=0.1,
         num_targets=1,
+        num_task_specific_layers=1,
     ):
         super(KGNNModel, self).__init__()
 
@@ -39,6 +40,10 @@ class KGNNModel(torch.nn.Module):
         self.channels = channels
         self.use_jumping_knowledge = use_jumping_knowledge
         self.use_dropout = use_dropout
+        self.num_targets = num_targets
+        self.num_fc_layers = num_fc_layers
+        assert num_task_specific_layers <= num_fc_layers  # for now
+        self.num_task_specific_layers = num_task_specific_layers
 
         self.mggc1 = ModifiedGatedGraphConv(
             channels,
@@ -116,32 +121,85 @@ class KGNNModel(torch.nn.Module):
 
         self.dropout = nn.Dropout(p=dropout_p)
 
-        self.fc_layers = nn.ModuleList(
-            self.make_fc_layers(num_fc_layers, num_targets=num_targets)
-        )
+        num_fc_input_features = self.channels * 4  # for set2set + cat
+        self.pre_fc_batchnorm = torch.nn.BatchNorm1d(num_fc_input_features)
 
-        self.pre_fc_batchnorm = torch.nn.BatchNorm1d(self.fc_layers[0].in_features)
-
-        self.batch_norms_for_fc = nn.ModuleList(
-            [
-                torch.nn.BatchNorm1d(self.fc_layers[i + 1].in_features)
-                for i in range(num_fc_layers - 1)
-            ]
-        )
-
-    def make_fc_layers(self, num_fc_layers, num_targets):
-        fc_layers = []
-        in_channels = self.channels * 4  # for set2set + cat
-        out_channels = None  # in_channels // 2
-        for i in range(num_fc_layers):
-            if i != 0:
-                in_channels = out_channels
-            if i == num_fc_layers - 1:
-                out_channels = num_targets
-            else:
+        if num_task_specific_layers > 1:  # splitting layers into shared and task-specific
+            # shared part
+            fc_layers = []
+            out_channels = None  # in_channels // 2
+            for i in range(num_fc_layers-num_task_specific_layers):
+                if i == 0:
+                    in_channels = num_fc_input_features
+                else:
+                    in_channels = out_channels
                 out_channels = in_channels // 2
-            fc_layers += [nn.Linear(in_channels, out_channels)]
-        return fc_layers
+                fc_layers += [nn.Linear(in_channels, out_channels)]
+            self.fc_layers = nn.ModuleList(fc_layers)  # shared fc layers
+
+            self.batch_norms_for_fc = nn.ModuleList(
+                [
+                    torch.nn.BatchNorm1d(self.fc_layers[i].out_features)
+                    for i in range(len(self.fc_layers))
+                ]
+            )
+
+            # tasks(targets)-specific heads
+            heads = []
+            for _ in range(num_targets):
+                head = {}
+
+                head_fc_layers = []
+                out_channels = None  # in_channels // 2
+                for i in range(num_task_specific_layers):
+                    if i == 0:
+                        if num_task_specific_layers == num_fc_layers:
+                            in_channels = num_fc_input_features
+                        else:
+                            in_channels = self.fc_layers[-1].out_features
+                    else:
+                        in_channels = out_channels
+
+                    if i == num_task_specific_layers-1:
+                        out_channels = 1
+                    else:
+                        out_channels = in_channels // 2
+                    head_fc_layers += [nn.Linear(in_channels, out_channels)]
+                head['fc_layers'] = nn.ModuleList(head_fc_layers)
+
+                head['batch_norms_for_fc'] = nn.ModuleList(
+                    [
+                        torch.nn.BatchNorm1d(head['fc_layers'][i].out_features)
+                        for i in range(num_task_specific_layers-1)
+                    ]
+                )
+                head = nn.ModuleDict(head)
+                heads.append(head)
+
+            self.heads = nn.ModuleList(heads)
+        
+        else:  # same thing as before
+            fc_layers = []
+            out_channels = None  # in_channels // 2
+            for i in range(num_fc_layers):
+                if i == 0:
+                    in_channels = num_fc_input_features
+                else:
+                    in_channels = out_channels
+
+                if i == num_fc_layers - 1:
+                    out_channels = num_targets
+                else:
+                    out_channels = in_channels // 2
+                fc_layers += [nn.Linear(in_channels, out_channels)]
+            self.fc_layers = nn.ModuleList(fc_layers)
+            
+            self.batch_norms_for_fc = nn.ModuleList(
+                [
+                    torch.nn.BatchNorm1d(self.fc_layers[i+1].in_features)
+                    for i in range(num_fc_layers-1)
+                ]
+            )
 
     def forward(self, data):
         x, edge_index, edge_attr, batch = (
@@ -178,14 +236,42 @@ class KGNNModel(torch.nn.Module):
 
         x = self.pre_fc_batchnorm(x)
 
-        for i, fc in enumerate(self.fc_layers):
-            if self.use_dropout and i == 1:
-                x = self.dropout(x)
+        if self.num_task_specific_layers > 1:
+            for i in range(self.num_fc_layers):
 
-            x = fc(x)
+                if self.use_dropout and i == 1:
+                    x = self.dropout(x)
 
-            if i != len(self.fc_layers) - 1:
-                x = self.batch_norms_for_fc[i](x)
-                x = F.relu(x)
+                if i < len(self.fc_layers):
+                    x = self.fc_layers[i](x)
+                    x = self.batch_norms_for_fc[i](x)
+                    x = F.relu(x)
+                else:
+                    head_fc_idx = i-len(self.fc_layers)
+                    if head_fc_idx == 0:
+                        heads_out = [x]*self.num_targets
+                    for head_idx in range(self.num_targets):
+                        head = self.heads[head_idx]
+                        head_fc = head['fc_layers'][head_fc_idx]
+                        heads_out[head_idx] = head_fc(heads_out[head_idx])
+
+                        if i != self.num_fc_layers - 1:
+                            head_bn = head['batch_norms_for_fc'][head_fc_idx]
+                            
+                            heads_out[head_idx] = head_bn(heads_out[head_idx])
+                            heads_out[head_idx] = F.relu(heads_out[head_idx])
+            x = torch.cat(heads_out, dim=1)
+
+
+        else:  # same thing as before
+            for i, fc in enumerate(self.fc_layers):
+                if self.use_dropout and i == 1:
+                    x = self.dropout(x)
+
+                x = fc(x)
+
+                if i != len(self.fc_layers) - 1:
+                    x = self.batch_norms_for_fc[i](x)
+                    x = F.relu(x)
 
         return x

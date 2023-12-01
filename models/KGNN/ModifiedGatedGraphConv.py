@@ -37,9 +37,12 @@ class ModifiedGatedGraphConv(MessagePassing):
         )
 
         # if use_edgeattr_data:
+        # TODO delete self.nn for mgcc4 and mgcc5 where it's not used/trained
         self.nn = torch.nn.Sequential(torch.nn.Linear(edge_in_size, 128),
                                        torch.nn.ReLU(),
-                                       torch.nn.Linear(128, self.out_channels * self.out_channels))
+                                       torch.nn.Linear(128, self.out_channels * self.out_channels)
+                                       )
+        
         # self.nn = torch.nn.Sequential(torch.nn.Linear(4, 128),
         #                                torch.nn.ReLU(),
         #                                torch.nn.Linear(128, self.out_channels * self.out_channels))
