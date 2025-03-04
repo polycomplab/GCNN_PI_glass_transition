@@ -2,7 +2,7 @@
 
 This toolkit can be used to train a GCNN to predict a molecular property (such as Glass Transition Temperature (Tg) or permeability) from SMILES description of a monomer molecule.
 
-### "Synthetic" and experimental datasets of PolyAskInG database are available at http://polycomplab.org/index.php/ru/database.html
+### "Synthetic" and experimental datasets of PolyAskInG database are available at http://polycomplab.org/index.php/ru/database.html or by direct links: https://disk.yandex.ru/d/-iCDno1j473jYw ("synthetic" dataset) and https://disk.yandex.ru/d/ZvGuIsG02yw8kA (experimental dataset).
 
 For the reference purpose and for the details of PolyAskIng database generation, please, see:
 
